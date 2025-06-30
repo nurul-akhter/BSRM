@@ -5,8 +5,10 @@ import streamlit as st
 from langchain_helper import create_vector_db, get_qa_chain
 
 st.sidebar.title("Admin Panel:")
+st.sidebar.write("\n\n\n\n\n")
+st.sidebar.write("\n\n\n\n\n")
 st.sidebar.subheader("Update your knowledgebase:-")
-st.sidebar.write(" ")
+
 with st.sidebar.container():
     question =st.sidebar.text_input("Question", key="question")
     answer=st.sidebar.text_area("Answer:", height=200,key="answer")

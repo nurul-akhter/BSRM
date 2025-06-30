@@ -77,7 +77,7 @@ def get_qa_chain(type):
     vectordb = FAISS.load_local(vectordb_file_path, embeddings,allow_dangerous_deserialization=True)
 
     # Initialize retriever
-    retriever = vectordb.as_retriever(score_threshold=0.7)
+    retriever = vectordb.as_retriever(score_threshold=0.6)
 
 
     # Define the system prompt
