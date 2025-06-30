@@ -1,8 +1,9 @@
 import os
 
+import pandas as pd
 from dotenv import load_dotenv
 from langchain.chains import RetrievalQA
-from langchain.document_loaders.csv_loader import CSVLoader
+from langchain.document_loaders import DataFrameLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores import FAISS
 from langchain_community.document_loaders import PyPDFLoader
@@ -11,6 +12,7 @@ from langchain_google_genai import (ChatGoogleGenerativeAI,
                                     GoogleGenerativeAIEmbeddings)
 
 # Load environment variables
+load_dotenv()
 api_key = os.getenv("GOOGLE_API_KEY")
 
 vectordb_pdf_path = "pdf_db"
@@ -26,18 +28,37 @@ def load_pdf():
     docs = text_splitter.split_documents(data)
     return docs
 
-def load_csv():
-    loader = CSVLoader(file_path='./data/faq_bsrm.csv', source_column="Question", encoding="utf-8")
-    data = loader.load()
-    return data
+def update_csv(question,answer ):
+
+    new_row = {
+        "Question": question,
+        "Answer": answer,
+        "category": "",  # Optional: replace if needed
+        "link": ""       # Optional: replace if needed
+    }
+
+    pd.DataFrame([new_row]).to_csv('./data/faq_bsrm.csv', mode='a', header=False, index=False)  
+ 
+
+
+def load_csv_combined():
+    df = pd.read_csv('./data/faq_bsrm.csv')
+    df.dropna(subset=["Question", "Answer"], inplace=True)
+
+    # Combine Question and Answer into one string for embedding
+    df["content"] = "Question: " + df["Question"] + "\n\nAnswer: " + df["Answer"]
+    # Use DataFrameLoader with the combined content column
+    loader = DataFrameLoader(df, page_content_column="content")
+    documents = loader.load()
+    return documents
 
 
 
 
-def create_vector_db(type):
-
-    docs = load_pdf() if type == "pdf" else load_csv()
-    vectordb_file_path = vectordb_pdf_path if type == "pdf" else vectordb_faq_path
+def create_vector_db(question,answer):
+    update_csv(question,answer)
+    docs =  load_csv_combined()
+    vectordb_file_path =  vectordb_faq_path
 
     # Create a FAISS instance for vector database from 'data'
     vectordb = FAISS.from_documents(documents=docs,
